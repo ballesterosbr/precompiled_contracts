@@ -4,7 +4,7 @@ contract ByzantiumContracts {
 
     function mulP(uint256 _px, uint256 _py, uint256 _scalar) public view returns (uint256, uint256) {
         assembly {
-            // Free memory pointer
+
             let pointer := mload(0x40)
 
             mstore(pointer, _px)
@@ -41,30 +41,24 @@ contract ByzantiumContracts {
         }
     }
 
-    function modExp(uint256 _b, uint256 _e, uint256 _m) public returns (uint256 result) {
+    function modExp(uint256 _b, uint256 _e, uint256 _m) public view returns (uint256) {
         assembly {
-            // Free memory pointer
+            
             let pointer := mload(0x40)
 
-            // Define length of base, exponent and modulus. 0x20 == 32 bytes
             mstore(pointer, 0x20)
             mstore(add(pointer, 0x20), 0x20)
             mstore(add(pointer, 0x40), 0x20)
 
-            // Define variables base, exponent and modulus
             mstore(add(pointer, 0x60), _b)
             mstore(add(pointer, 0x80), _e)
             mstore(add(pointer, 0xa0), _m)
 
-            // Store the result
-            let value := mload(0xc0)
-
-            // Call the precompiled contract 0x05 = bigModExp
-            if iszero(call(not(0), 0x05, 0, pointer, 0xc0, value, 0x20)) {
+            if iszero(staticcall(not(0), 0x05, pointer, 0xc0, pointer, 0x20)) {
                 revert(0, 0)
             }
-
-            result := mload(value)
+            
+            return(pointer,0x20)
         }
     }
 }
